@@ -4,10 +4,10 @@ import cors from 'cors';
 
 import { logger } from './middleware/logger.js';
 
-
 import { connectMongoDB } from './db/connectMongoDB.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
+import productsRouter from './routes/productsRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3030;
@@ -15,9 +15,12 @@ const PORT = process.env.PORT ?? 3030;
 app.use(express.json());
 app.use(cors());
 
-app.use(logger)
-app.use(notFoundHandler)
-app.use(errorHandler)
+app.use(logger);
+
+app.use('/', productsRouter);
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 await connectMongoDB();
 app.listen(PORT, () => {
