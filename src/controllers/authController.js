@@ -2,7 +2,7 @@ import createHttpError from 'http-errors';
 import { User } from '../models/user.js';
 import bcrypt from 'bcrypt';
 import { createSession, setSessionCookie } from '../services/auth.js';
-
+import { Session } from '../models/session.js';
 export const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -25,4 +25,24 @@ export const registerUser = async (req, res) => {
   setSessionCookie(res, newSession);
 
   res.status(201).json({ newUser });
+};
+
+export const LoginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw createHttpError(401, 'User not found');
+  }
+
+  const isValidPassword = await bcrypt.compare(password, user.password);
+  if (!isValidPassword) {
+    throw createHttpError(401, 'Invalid credentials');
+  }
+
+  await Session.deleteOne({ userId: user._id });
+
+  const newSession = await createSession(user._id);
+  setSessionCookie(res, newSession);
+  res.status(200).json(user);
 };
