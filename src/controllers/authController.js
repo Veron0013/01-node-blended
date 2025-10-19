@@ -27,7 +27,7 @@ export const registerUser = async (req, res) => {
   res.status(201).json({ newUser });
 };
 
-export const LoginUser = async (req, res) => {
+export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
@@ -46,3 +46,19 @@ export const LoginUser = async (req, res) => {
   setSessionCookie(res, newSession);
   res.status(200).json(user);
 };
+export const logoutUser = async (req, res, next) => {
+  const { sessionId } = req.cookies;
+
+  if (!sessionId) {
+    next(createHttpError(401, "Invalid session"))
+  }
+
+  await Session.deleteOne({ _id: sessionId })
+
+  res.clearCookie("accessToken")
+  res.clearCookie("refreshToken")
+  res.clearCookie("sessionId")
+
+  res.status(204).send()
+
+}
