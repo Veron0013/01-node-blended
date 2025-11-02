@@ -9,6 +9,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 
 import { sendMail } from '../utils/sendMail.js';
+import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 
 export const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
@@ -144,7 +145,6 @@ export const resetMail = async (req, res) => {
 
 };
 
-
 export const resetPassword = async (req, res) => {
   const { password, token } = req.body;
 
@@ -172,3 +172,26 @@ export const resetPassword = async (req, res) => {
     message: "Password reset successfully"
   });
 };
+
+export const updateUserData = async (req, res) => {
+
+  const userId = req.user._id
+
+  const user = User.findById(userId)
+
+  if (!user) {
+    throw createHttpError(401, "User not found")
+  }
+
+  let avatar = user.avatar
+  const username = req.body.name ? req.body.name : user.name
+
+  if (req.file) {
+    const result = await saveFileToCloudinary(req.file.buffer)
+    avatar = result.secure_url
+  }
+  const updatedUser = await User.findByIdAndUpdate(userId, { avatar, name: username }, { new: true })
+
+  return res.status(200).json(updatedUser)
+}
+
